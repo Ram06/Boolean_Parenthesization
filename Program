@@ -1,0 +1,129 @@
+#pragma warning(disable: 4996)
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int count(char symbolsArray[], char operatorsArray[], int n) {
+
+	int** _true; int** _false; int count = 0;
+
+	_true = (int**)malloc(n * sizeof(int));
+	for (int i = 0; i < n; i++)
+	{
+		_true[i] = (int *)malloc(n * sizeof(int));
+	}//Creating a Two Dimensional Array
+
+	_false = (int**)malloc(n * sizeof(int));
+	for (int i = 0; i < n; i++)
+	{
+		_false[i] = (int *)malloc(n * sizeof(int));
+	}//Creating a Two Dimensional Array
+
+	for (int i = 0; i < n; i++) {
+		_true[i][i] = (symbolsArray[i] == 'T') ? 1 : 0;
+		_false[i][i] = (symbolsArray[i] == 'F') ? 1 : 0;
+	}
+
+	/*for (int i = 0; i < n; i++)
+	{
+	printf("%c %c\n", operatorsArray[i], symbolsArray[i]);
+	}
+	printf("%c\n", symbolsArray[n - 1]);
+	*/
+	for (int space = 1; space < n; ++space) {
+		for (int i = 0, j = space; j < n; ++i, ++j) {
+			_true[i][j] = _false[i][j] = 0;
+			for (int l = 0; l < space; l++) {
+				int k = i + l;
+				//printf("%d %d %d %d %d\n", space, i, j, l, k);
+				int total_ik = _true[i][k] + _false[i][k];
+				int total_kj = _true[k + 1][j] + _false[k + 1][j];
+
+				if (operatorsArray[k] == '&') {
+					_true[i][j] += _true[i][k] * _true[k + 1][j];
+					_false[i][j] += (total_ik * total_kj - _true[i][k] * _true[k + 1][j]);
+				}
+				if (operatorsArray[k] == '|') {
+					_false[i][j] += _false[i][k] * _false[k + 1][j];
+					_true[i][j] += (total_ik * total_kj - _false[i][k] * _false[k + 1][j]);
+				}
+				if (operatorsArray[k] == '^') {
+					_true[i][j] += _false[i][k] * _true[k + 1][j] + _true[i][k] * _false[k + 1][j];
+					_false[i][j] += _true[i][k] * _true[k + 1][j] + _false[i][k] * _false[k + 1][j];
+				}
+				//printf("_true[%d][%d]=%d _false[%d][%d]=%d\n\n", i, j, _true[i][j], i, j, _false[i][j]);
+			}
+		}
+	}
+	count = _true[0][n - 1];
+	//free the memory blocks
+	free(_true);
+	free(_false);
+	return count;
+}
+
+//Sample input-->
+//2
+//7
+//T|T&F^T
+//5
+//T^F|F
+
+//Sample output-->
+//4
+//2
+
+int main() {
+
+	int t, no_symbols, no_operators;
+
+	scanf("%d", &t);
+
+	int* length = (int*)malloc(t * sizeof(int));
+	char** text = (char**)malloc(t * sizeof(char));
+		
+	for (int i = 0; i < t; i++)
+	{
+		scanf("%d", &length[i]);
+		text[i] = (char *)malloc((length[i] + 2) * sizeof(char));//Creating a Two Dimensional Array		
+		scanf("%s", text[i]);
+	}//Scanning the input
+
+
+	int r = 0; char* symbolsArray; char* operatorsArray;
+	while (t--) {
+		
+		no_symbols = length[r] / 2 + 1;
+		symbolsArray = (char*)malloc((no_symbols + 2) * sizeof(char));
+
+		no_operators = length[r] / 2;
+		operatorsArray = (char*)malloc((no_operators + 2) * sizeof(char));
+
+		for (int i = 0, j = 0, k = 0; i < length[r]; i++) {
+			if ((text[r][i] == '|') || (text[r][i] == '&') || (text[r][i] == '^')) {
+				operatorsArray[j] = text[r][i];
+				j++;
+			}
+			else {
+				symbolsArray[k] = text[r][i];
+				k++;
+			}
+		}
+		
+		/*for (int i = 0; i < no_operators; i++)
+		{
+		printf("%c %c\n", operatorsArray[i], symbolsArray[i]);
+		}
+		printf("%c\n", symbolsArray[no_symbols - 2]);*/
+		
+		printf("%d\n", count(symbolsArray, operatorsArray, no_symbols));
+
+		//free the memory blocks
+		free(text[r]);
+		free(symbolsArray);
+		free(operatorsArray);
+		r++;
+	}
+	return 0;
+}
+
